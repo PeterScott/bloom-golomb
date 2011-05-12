@@ -18,6 +18,7 @@
    where M is a power of two. For efficiency, also pass in
    log_2(M). */
 int bloom_compressed_bits(int x, int M, int log2_M) {
+  //if (x > 0) printf("[%i]", x);
   return (x/M + 1) + log2_M;
 }
 
@@ -26,16 +27,41 @@ int bloom_compressed_bits(int x, int M, int log2_M) {
 int bloom_compressed_bits_nibbles(uint8_t *array, int n, int M, int log2_M) {
   int bits = 0;
   uint8_t byte = 0;
+  int last_nonzero_pos = 0;
 
   for (int i = 0; i < n/2; i++) {
     byte = array[i];
-    bits += bloom_compressed_bits(HIGH_NIBBLE(byte), M, log2_M);
-    bits += bloom_compressed_bits(LOW_NIBBLE(byte), M, log2_M);
+    int hi = HIGH_NIBBLE(byte), lo = LOW_NIBBLE(byte);
+    
+    if (hi) {
+      int interval = 2*i - last_nonzero_pos;
+      if (interval > 0)
+        bits += bloom_compressed_bits(interval, M, log2_M);
+      last_nonzero_pos = 2*i;
+      //for (int j=0; j < hi-1; j++) printf("[0]");
+      bits += (hi - 1) * bloom_compressed_bits(0, M, log2_M);
+    }
+
+    if (lo) {
+      int interval = 2*i+1 - last_nonzero_pos;
+      if (interval > 0)
+        bits += bloom_compressed_bits(interval, M, log2_M);
+      last_nonzero_pos = 2*i+1;
+      //for (int j=0; j < lo-1; j++) printf("[0]");
+      bits += (lo - 1) * bloom_compressed_bits(0, M, log2_M);
+    }
   }
   
   /* Deal with odd-numbered nibble arrays. */
   if (n & 1) {
-    bits += bloom_compressed_bits(HIGH_NIBBLE(array[n/2]), M, log2_M);
+    int hi = HIGH_NIBBLE(array[n/2]);
+    if (hi) {
+      int interval = n - last_nonzero_pos - 1;
+      if (interval > 0)
+        bits += bloom_compressed_bits(interval, M, log2_M);
+      bits += (hi - 1) * bloom_compressed_bits(0, M, log2_M);
+      //for (int j=0; j < hi-1; j++) printf("[0]");
+    }
   }
   
   return bits;

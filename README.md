@@ -1,4 +1,4 @@
-Golomb coding for compressed Bloom filters.
+Golomb coding for compressed Bloom filters. (Work in progress)
 ===========================================
 
 This provides the basic code for encoding and decoding counting bloom
@@ -17,3 +17,5 @@ compressed values.
 
 You can use `bloom_compressed_bits_nibbles()` on an array of 4-bit
 nibbles to get the number of bits after compression. FIXME: have this tell the intervals, not the numbers themselves.
+
+FIXME: expand on this as the code expands.
